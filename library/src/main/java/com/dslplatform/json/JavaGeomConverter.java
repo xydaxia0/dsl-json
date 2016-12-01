@@ -6,8 +6,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public abstract class JavaGeomConverter {
 
@@ -117,8 +117,8 @@ public abstract class JavaGeomConverter {
 		return new Point2D.Double(x, y);
 	}
 
-	public static ArrayList<Point2D> deserializeLocationCollection(final JsonReader reader) throws IOException {
-		final ArrayList<Point2D> res = new ArrayList<Point2D>(4);
+	public static List<Point2D> deserializeLocationCollection(final JsonReader reader) throws IOException {
+		final List<Point2D> res = reader.newList();
 		reader.deserializeCollection(LocationReader, res);
 		return res;
 	}
@@ -127,8 +127,8 @@ public abstract class JavaGeomConverter {
 		reader.deserializeCollection(LocationReader, res);
 	}
 
-	public static ArrayList<Point2D> deserializeLocationNullableCollection(final JsonReader reader) throws IOException {
-		final ArrayList<Point2D> res = new ArrayList<Point2D>(4);
+	public static List<Point2D> deserializeLocationNullableCollection(final JsonReader reader) throws IOException {
+		final List<Point2D> res = reader.newList();
 		reader.deserializeNullableCollection(LocationReader, res);
 		return res;
 	}
@@ -195,7 +195,7 @@ public abstract class JavaGeomConverter {
 
 	}
 
-	public static ArrayList<Point> deserializePointCollection(final JsonReader reader) throws IOException {
+	public static List<Point> deserializePointCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(PointReader);
 	}
 
@@ -203,7 +203,7 @@ public abstract class JavaGeomConverter {
 		reader.deserializeCollection(PointReader, res);
 	}
 
-	public static ArrayList<Point> deserializePointNullableCollection(final JsonReader reader) throws IOException {
+	public static List<Point> deserializePointNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(PointReader);
 	}
 
@@ -282,8 +282,8 @@ public abstract class JavaGeomConverter {
 		return new Rectangle2D.Double(x, y, width, height);
 	}
 
-	public static ArrayList<Rectangle2D> deserializeRectangleCollection(final JsonReader reader) throws IOException {
-		final ArrayList<Rectangle2D> res = new ArrayList<Rectangle2D>(4);
+	public static List<Rectangle2D> deserializeRectangleCollection(final JsonReader reader) throws IOException {
+		final List<Rectangle2D> res = reader.newList();
 		reader.deserializeCollection(RectangleReader, res);
 		return res;
 	}
@@ -292,8 +292,8 @@ public abstract class JavaGeomConverter {
 		reader.deserializeCollection(RectangleReader, res);
 	}
 
-	public static ArrayList<Rectangle2D> deserializeRectangleNullableCollection(final JsonReader reader) throws IOException {
-		final ArrayList<Rectangle2D> res = new ArrayList<Rectangle2D>(4);
+	public static List<Rectangle2D> deserializeRectangleNullableCollection(final JsonReader reader) throws IOException {
+		final List<Rectangle2D> res = reader.newList();
 		reader.deserializeNullableCollection(RectangleReader, res);
 		return res;
 	}
@@ -333,7 +333,7 @@ public abstract class JavaGeomConverter {
 		return javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(content));
 	}
 
-	public static ArrayList<BufferedImage> deserializeImageCollection(final JsonReader reader) throws IOException {
+	public static List<BufferedImage> deserializeImageCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(ImageReader);
 	}
 
@@ -341,7 +341,7 @@ public abstract class JavaGeomConverter {
 		reader.deserializeCollection(ImageReader, res);
 	}
 
-	public static ArrayList<BufferedImage> deserializeImageNullableCollection(final JsonReader reader) throws IOException {
+	public static List<BufferedImage> deserializeImageNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(ImageReader);
 	}
 

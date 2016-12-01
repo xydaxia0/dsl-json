@@ -2,9 +2,7 @@ package com.dslplatform.json;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -62,7 +60,7 @@ public class JsonReader<TContext> {
 		this(new char[64], buffer, buffer.length, context, null);
 	}
 
-	JsonReader(final byte[] buffer, final TContext context, KeyCache keyCache) {
+	protected JsonReader(final byte[] buffer, final TContext context, KeyCache keyCache) {
 		this(new char[64], buffer, buffer.length, context, keyCache);
 	}
 
@@ -81,7 +79,7 @@ public class JsonReader<TContext> {
 		this(buffer, length, context, tmp, null);
 	}
 
-	JsonReader(final byte[] buffer, final int length, final TContext context, final char[] tmp, final KeyCache keyCache) {
+	protected JsonReader(final byte[] buffer, final int length, final TContext context, final char[] tmp, final KeyCache keyCache) {
 		this(tmp, buffer, length, context, keyCache);
 		if (tmp == null) {
 			throw new NullPointerException("tmp buffer provided as null.");
@@ -108,6 +106,22 @@ public class JsonReader<TContext> {
 	@Override
 	public String toString() {
 		return new String(buffer, 0, length, UTF_8);
+	}
+
+	public <T> List<T> emptyList() {
+		return new ArrayList<T>(0);
+	}
+
+	public <T> List<T> newList() {
+		return new ArrayList<T>(4);
+	}
+
+	public <T> Map<String, T> emptyMap() {
+		return new LinkedHashMap<String, T>(0);
+	}
+
+	public <T> Map<String, T> newMap() {
+		return new LinkedHashMap<String, T>(4);
 	}
 
 	public byte read() throws IOException {
@@ -658,8 +672,8 @@ public class JsonReader<TContext> {
 		}
 	}
 
-	public final <T, S extends T> ArrayList<T> deserializeCollection(final ReadObject<S> readObject) throws IOException {
-		final ArrayList<T> res = new ArrayList<T>(4);
+	public final <T, S extends T> List<T> deserializeCollection(final ReadObject<S> readObject) throws IOException {
+		final List<T> res = newList();
 		deserializeCollection(readObject, res);
 		return res;
 	}
@@ -673,7 +687,7 @@ public class JsonReader<TContext> {
 		checkArrayEnd();
 	}
 
-	public final <T, S extends T> ArrayList<T> deserializeNullableCollection(final ReadObject<S> readObject) throws IOException {
+	public final <T, S extends T> List<T> deserializeNullableCollection(final ReadObject<S> readObject) throws IOException {
 		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeNullableCollection(readObject, res);
 		return res;
@@ -696,8 +710,8 @@ public class JsonReader<TContext> {
 		checkArrayEnd();
 	}
 
-	public final <T extends JsonObject> ArrayList<T> deserializeCollection(final ReadJsonObject<T> readObject) throws IOException {
-		final ArrayList<T> res = new ArrayList<T>(4);
+	public final <T extends JsonObject> List<T> deserializeCollection(final ReadJsonObject<T> readObject) throws IOException {
+		final List<T> res = emptyList();
 		deserializeCollection(readObject, res);
 		return res;
 	}
@@ -716,8 +730,8 @@ public class JsonReader<TContext> {
 		checkArrayEnd();
 	}
 
-	public final <T extends JsonObject> ArrayList<T> deserializeNullableCollection(final ReadJsonObject<T> readObject) throws IOException {
-		final ArrayList<T> res = new ArrayList<T>(4);
+	public final <T extends JsonObject> List<T> deserializeNullableCollection(final ReadJsonObject<T> readObject) throws IOException {
+		final List<T> res = emptyList();
 		deserializeNullableCollection(readObject, res);
 		return res;
 	}

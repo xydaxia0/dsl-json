@@ -25,9 +25,9 @@ public abstract class ObjectConverter {
 		}
 	};
 	@SuppressWarnings("rawtypes")
-	static final JsonReader.ReadObject<LinkedHashMap> MapReader = new JsonReader.ReadObject<LinkedHashMap>() {
+	static final JsonReader.ReadObject<Map> MapReader = new JsonReader.ReadObject<Map>() {
 		@Override
-		public LinkedHashMap read(JsonReader reader) throws IOException {
+		public Map read(JsonReader reader) throws IOException {
 			return deserializeMap(reader);
 		}
 	};
@@ -112,13 +112,13 @@ public abstract class ObjectConverter {
 		return res;
 	}
 
-	public static LinkedHashMap<String, Object> deserializeMap(final JsonReader reader) throws IOException {
+	public static Map<String, Object> deserializeMap(final JsonReader reader) throws IOException {
 		if (reader.last() != '{') {
 			throw reader.expecting("{");
 		}
 		byte nextToken = reader.getNextToken();
-		if (nextToken == '}') return new LinkedHashMap<String, Object>(0);
-		final LinkedHashMap<String, Object> res = new LinkedHashMap<String, Object>();
+		if (nextToken == '}') return reader.emptyMap();
+		final Map<String, Object> res = reader.newMap();
 		String key = reader.readKey();
 		res.put(key, deserializeObject(reader));
 		while ((nextToken = reader.getNextToken()) == ',') {
@@ -132,7 +132,7 @@ public abstract class ObjectConverter {
 		return res;
 	}
 
-	public static ArrayList<Map<String, Object>> deserializeMapCollection(final JsonReader reader) throws IOException {
+	public static List<Map<String, Object>> deserializeMapCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(TypedMapReader);
 	}
 
@@ -140,7 +140,7 @@ public abstract class ObjectConverter {
 		reader.deserializeCollection(TypedMapReader, res);
 	}
 
-	public static ArrayList<Map<String, Object>> deserializeNullableMapCollection(final JsonReader reader) throws IOException {
+	public static List<Map<String, Object>> deserializeNullableMapCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(TypedMapReader);
 	}
 

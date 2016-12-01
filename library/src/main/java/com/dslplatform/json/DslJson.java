@@ -124,6 +124,7 @@ public class DslJson<TContext> implements UnknownSerializer {
 		if (javaSpecifics) {
 			registerJavaSpecifics(this);
 		}
+		//TODO
 		registerReader(LinkedHashMap.class, ObjectConverter.MapReader);
 		registerReader(HashMap.class, ObjectConverter.MapReader);
 		registerReader(Map.class, ObjectConverter.MapReader);
@@ -249,21 +250,6 @@ public class DslJson<TContext> implements UnknownSerializer {
 	 */
 	public JsonStreamReader<TContext> newReader(InputStream stream, byte[] buffer) throws IOException {
 		return new JsonStreamReader<TContext>(stream, buffer, context, keyCache);
-	}
-
-	/**
-	 * Create a reader bound to this DSL-JSON.
-	 * Bound reader can reuse key cache (which is used during Map deserialization)
-	 * This method id Deprecated since it should be avoided.
-	 * It's better to use byte[] or InputStream based readers
-	 *
-	 * @param input JSON string
-	 * @return bound reader
-	 */
-	@Deprecated
-	public JsonReader<TContext> newReader(String input) {
-		final byte[] bytes = input.getBytes(UTF8);
-		return new JsonReader<TContext>(bytes, context, keyCache);
 	}
 
 	private static void loadDefaultConverters(final DslJson json, final String name) {
@@ -486,12 +472,12 @@ public class DslJson<TContext> implements UnknownSerializer {
 	}
 
 	@Deprecated
-	public static ArrayList<Object> deserializeList(final JsonReader reader) throws IOException {
+	public static List<Object> deserializeList(final JsonReader reader) throws IOException {
 		return ObjectConverter.deserializeList(reader);
 	}
 
 	@Deprecated
-	public static LinkedHashMap<String, Object> deserializeMap(final JsonReader reader) throws IOException {
+	public static Map<String, Object> deserializeMap(final JsonReader reader) throws IOException {
 		return ObjectConverter.deserializeMap(reader);
 	}
 
@@ -777,7 +763,7 @@ public class DslJson<TContext> implements UnknownSerializer {
 					}
 					final JsonReader.ReadObject<?> contentReader = tryFindReader(content);
 					if (contentReader != null) {
-						final ArrayList<?> result = json.deserializeNullableCollection(contentReader);
+						final List<?> result = json.deserializeNullableCollection(contentReader);
 						if (container.isArray()) {
 							return returnAsArray(content, result);
 						}
@@ -787,7 +773,7 @@ public class DslJson<TContext> implements UnknownSerializer {
 						if (JsonObject.class.isAssignableFrom(contentType)) {
 							final JsonReader.ReadJsonObject<JsonObject> objectReader = getObjectReader(contentType);
 							if (objectReader != null) {
-								final ArrayList<JsonObject> result = json.deserializeNullableCollection(objectReader);
+								final List<JsonObject> result = json.deserializeNullableCollection(objectReader);
 								if (container.isArray()) {
 									return result.toArray((Object[]) Array.newInstance(contentType, 0));
 								}
@@ -807,14 +793,14 @@ public class DslJson<TContext> implements UnknownSerializer {
 			}
 			final JsonReader.ReadObject<?> contentReader = tryFindReader(content);
 			if (contentReader != null) {
-				final ArrayList<?> result = json.deserializeNullableCollection(contentReader);
+				final List<?> result = json.deserializeNullableCollection(contentReader);
 				return returnAsArray(content, result);
 			} else if (content instanceof Class<?>) {
 				final Class<?> contentType = (Class<?>) content;
 				if (JsonObject.class.isAssignableFrom(contentType)) {
 					final JsonReader.ReadJsonObject<JsonObject> objectReader = getObjectReader(contentType);
 					if (objectReader != null) {
-						final ArrayList<JsonObject> result = json.deserializeNullableCollection(objectReader);
+						final List<JsonObject> result = json.deserializeNullableCollection(objectReader);
 						return result.toArray((Object[]) Array.newInstance(contentType, 0));
 					}
 				}
@@ -823,7 +809,7 @@ public class DslJson<TContext> implements UnknownSerializer {
 		return null;
 	}
 
-	private static Object returnAsArray(final Type content, final ArrayList<?> result) {
+	private static Object returnAsArray(final Type content, final List<?> result) {
 		if (content instanceof Class<?>) {
 			return convertResultToArray((Class<?>) content, result);
 		}
@@ -962,7 +948,7 @@ public class DslJson<TContext> implements UnknownSerializer {
 			throw json.expecting("[");
 		}
 		if (json.getNextToken() == ']') {
-			return new ArrayList<TResult>(0);
+			return json.emptyList();
 		}
 		if (JsonObject.class.isAssignableFrom(manifest)) {
 			final JsonReader.ReadJsonObject<JsonObject> reader = getObjectReader(manifest);

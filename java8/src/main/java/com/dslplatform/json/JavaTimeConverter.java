@@ -5,8 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public abstract class JavaTimeConverter {
 	public static final LocalDateTime MIN_LOCAL_DATE_TIME = LocalDateTime.of(1, 1, 1, 0, 0, 0, 0);
@@ -279,7 +279,7 @@ public abstract class JavaTimeConverter {
 		}
 	}
 
-	public static ArrayList<OffsetDateTime> deserializeDateTimeCollection(final JsonReader reader) throws IOException {
+	public static List<OffsetDateTime> deserializeDateTimeCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(DateTimeReader);
 	}
 
@@ -287,7 +287,7 @@ public abstract class JavaTimeConverter {
 		reader.deserializeCollection(DateTimeReader, res);
 	}
 
-	public static ArrayList<OffsetDateTime> deserializeDateTimeNullableCollection(final JsonReader reader) throws IOException {
+	public static List<OffsetDateTime> deserializeDateTimeNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(DateTimeReader);
 	}
 
@@ -295,7 +295,7 @@ public abstract class JavaTimeConverter {
 		reader.deserializeNullableCollection(DateTimeReader, res);
 	}
 
-	public static ArrayList<LocalDateTime> deserializeLocalDateTimeCollection(final JsonReader reader) throws IOException {
+	public static List<LocalDateTime> deserializeLocalDateTimeCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(LocalDateTimeReader);
 	}
 
@@ -303,7 +303,7 @@ public abstract class JavaTimeConverter {
 		reader.deserializeCollection(LocalDateTimeReader, res);
 	}
 
-	public static ArrayList<LocalDateTime> deserializeLocalDateTimeNullableCollection(final JsonReader reader) throws IOException {
+	public static List<LocalDateTime> deserializeLocalDateTimeNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(LocalDateTimeReader);
 	}
 
@@ -365,7 +365,7 @@ public abstract class JavaTimeConverter {
 		}
 	}
 
-	public static ArrayList<LocalDate> deserializeLocalDateCollection(final JsonReader reader) throws IOException {
+	public static List<LocalDate> deserializeLocalDateCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(LocalDateReader);
 	}
 
@@ -373,7 +373,7 @@ public abstract class JavaTimeConverter {
 		reader.deserializeCollection(LocalDateReader, res);
 	}
 
-	public static ArrayList<LocalDate> deserializeLocalDateNullableCollection(final JsonReader reader) throws IOException {
+	public static List<LocalDate> deserializeLocalDateNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(LocalDateReader);
 	}
 

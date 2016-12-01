@@ -45,24 +45,14 @@ public abstract class MapConverter {
 			throw new IOException("Expecting '{' at position " + reader.positionInStream() + ". Found " + (char) reader.last());
 		}
 		byte nextToken = reader.getNextToken();
-		if (nextToken == '}') return new LinkedHashMap<String, String>(0);
-		final LinkedHashMap<String, String> res = new LinkedHashMap<String, String>();
-		String key = StringConverter.deserialize(reader);
-		nextToken = reader.getNextToken();
-		if (nextToken != ':') {
-			throw new IOException("Expecting ':' at position " + reader.positionInStream() + ". Found " + (char) nextToken);
-		}
-		reader.getNextToken();
+		if (nextToken == '}') return reader.emptyMap();
+		final Map<String, String> res = reader.newMap();
+		String key = reader.readKey();
 		String value = StringConverter.deserializeNullable(reader);
 		res.put(key, value);
 		while ((nextToken = reader.getNextToken()) == ',') {
 			reader.getNextToken();
-			key = StringConverter.deserialize(reader);
-			nextToken = reader.getNextToken();
-			if (nextToken != ':') {
-				throw new IOException("Expecting ':' at position " + reader.positionInStream() + ". Found " + (char) nextToken);
-			}
-			reader.getNextToken();
+			key = reader.readKey();
 			value = StringConverter.deserializeNullable(reader);
 			res.put(key, value);
 		}
@@ -72,7 +62,7 @@ public abstract class MapConverter {
 		return res;
 	}
 
-	public static ArrayList<Map<String, String>> deserializeCollection(final JsonReader reader) throws IOException {
+	public static List<Map<String, String>> deserializeCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeCollection(TypedMapReader);
 	}
 
@@ -80,7 +70,7 @@ public abstract class MapConverter {
 		reader.deserializeCollection(TypedMapReader, res);
 	}
 
-	public static ArrayList<Map<String, String>> deserializeNullableCollection(final JsonReader reader) throws IOException {
+	public static List<Map<String, String>> deserializeNullableCollection(final JsonReader reader) throws IOException {
 		return reader.deserializeNullableCollection(TypedMapReader);
 	}
 
