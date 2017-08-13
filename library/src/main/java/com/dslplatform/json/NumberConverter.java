@@ -206,38 +206,32 @@ public abstract class NumberConverter {
 		}
 		final int start = reader.scanNumber();
 		final int end = reader.getCurrentIndex();
-		final int len = end - start;
-		if (len > 18) {
-			if (end == reader.length()) {
-				final NumberInfo tmp = readLongNumber(reader, start);
-				return parseDoubleGeneric(tmp.buffer, tmp.length, reader);
-			}
-			return parseDoubleGeneric(reader.prepareBuffer(start), len, reader);
-		}
 		final byte[] buf = reader.buffer;
 		final byte ch = buf[start];
 		if (ch == '-') {
-			return parseNegativeDouble(buf, reader, start, end, start + 1);
-		} else if (ch == '+') {
-			return parsePositiveDouble(buf, reader, start, end, start + 1);
+			return -parseDouble(buf, reader, start, end, 1);
 		}
-		return parsePositiveDouble(buf, reader, start, end, start);
+		return parseDouble(buf, reader, start, end, 0);
 	}
 
-	private static double parsePositiveDouble(final byte[] buf, final JsonReader reader, final int start, final int end, int i) throws IOException {
+	private static double parseDouble(final byte[] buf, final JsonReader reader, final int start, final int end, int offset) throws IOException {
 		long value = 0;
 		byte ch = ' ';
+		int i = start + offset;
 		for (; i < end; i++) {
 			ch = buf[i];
 			if (ch == '.') break;
 			final int ind = buf[i] - 48;
 			value = (value << 3) + (value << 1) + ind;
 			if (ind < 0 || ind > 9) {
-				return parseDoubleGeneric(reader.prepareBuffer(start), end - start, reader);
+				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 			}
 		}
-		if (i == end) return value;
-		else if (ch == '.') {
+		if (i == end) {
+			return value;
+		} else if (i > 18 + start || end - i > 19 + start) {
+			return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+		} else if (ch == '.') {
 			i++;
 			long div = 1;
 			for (; i < end; i++) {
@@ -245,36 +239,7 @@ public abstract class NumberConverter {
 				div = (div << 3) + (div << 1);
 				value = (value << 3) + (value << 1) + ind;
 				if (ind < 0 || ind > 9) {
-					return parseDoubleGeneric(reader.prepareBuffer(start), end - start, reader);
-				}
-			}
-			return value / (double) div;
-		}
-		return value;
-	}
-
-	private static double parseNegativeDouble(final byte[] buf, final JsonReader reader, final int start, final int end, int i) throws IOException {
-		long value = 0;
-		byte ch = ' ';
-		for (; i < end; i++) {
-			ch = buf[i];
-			if (ch == '.') break;
-			final int ind = buf[i] - 48;
-			value = (value << 3) + (value << 1) - ind;
-			if (ind < 0 || ind > 9) {
-				return parseDoubleGeneric(reader.prepareBuffer(start), end - start, reader);
-			}
-		}
-		if (i == end) return value;
-		else if (ch == '.') {
-			i++;
-			long div = 1;
-			for (; i < end; i++) {
-				final int ind = buf[i] - 48;
-				div = (div << 3) + (div << 1);
-				value = (value << 3) + (value << 1) - ind;
-				if (ind < 0 || ind > 9) {
-					return parseDoubleGeneric(reader.prepareBuffer(start), end - start, reader);
+					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 				}
 			}
 			return value / (double) div;
@@ -290,7 +255,7 @@ public abstract class NumberConverter {
 		try {
 			return Double.parseDouble(new String(buf, 0, end));
 		} catch (NumberFormatException nfe) {
-			throw new IOException("Error parsing float number at position: " + reader.positionInStream(len), nfe);
+			throw new IOException("Error parsing double number at position: " + reader.positionInStream(len), nfe);
 		}
 	}
 
@@ -356,79 +321,12 @@ public abstract class NumberConverter {
 		}
 		final int start = reader.scanNumber();
 		final int end = reader.getCurrentIndex();
-		final int len = end - start;
-		if (len > 18) {
-			if (end == reader.length()) {
-				final NumberInfo tmp = readLongNumber(reader, start);
-				return parseFloatGeneric(tmp.buffer, tmp.length, reader);
-			} else {
-				return parseFloatGeneric(reader.prepareBuffer(start), len, reader);
-			}
-		}
 		final byte[] buf = reader.buffer;
 		final byte ch = buf[start];
 		if (ch == '-') {
-			return parseNegativeFloat(buf, reader, start, end, start + 1);
-		} else if (ch == '+') {
-			return parsePositiveFloat(buf, reader, start, end, start + 1);
+			return -(float)parseDouble(buf, reader, start, end, 1);
 		}
-		return parsePositiveFloat(buf, reader, start, end, start);
-	}
-
-	private static float parsePositiveFloat(final byte[] buf, final JsonReader reader, final int start, final int end, int i) throws IOException {
-		long value = 0;
-		byte ch = ' ';
-		for (; i < end; i++) {
-			ch = buf[i];
-			if (ch == '.') break;
-			final int ind = buf[i] - 48;
-			value = (value << 3) + (value << 1) + ind;
-			if (ind < 0 || ind > 9) {
-				return parseFloatGeneric(reader.prepareBuffer(start), end - start, reader);
-			}
-		}
-		if (ch == '.') {
-			i++;
-			int div = 1;
-			for (; i < end; i++) {
-				final int ind = buf[i] - 48;
-				div = (div << 3) + (div << 1);
-				value = (value << 3) + (value << 1) + ind;
-				if (ind < 0 || ind > 9) {
-					return parseFloatGeneric(reader.prepareBuffer(start), end - start, reader);
-				}
-			}
-			return (float)((double)value / div);
-		}
-		return value;
-	}
-
-	private static float parseNegativeFloat(final byte[] buf, final JsonReader reader, final int start, final int end, int i) throws IOException {
-		long value = 0;
-		byte ch = ' ';
-		for (; i < end; i++) {
-			ch = buf[i];
-			if (ch == '.') break;
-			final int ind = buf[i] - 48;
-			value = (value << 3) + (value << 1) - ind;
-			if (ind < 0 || ind > 9) {
-				return parseFloatGeneric(reader.prepareBuffer(start), end - start, reader);
-			}
-		}
-		if (ch == '.') {
-			i++;
-			int div = 1;
-			for (; i < end; i++) {
-				final int ind = buf[i] - 48;
-				div = (div << 3) + (div << 1);
-				value = (value << 3) + (value << 1) - ind;
-				if (ind < 0 || ind > 9) {
-					return parseFloatGeneric(reader.prepareBuffer(start), end - start, reader);
-				}
-			}
-			return (float)((double)value / div);
-		}
-		return value;
+		return (float)parseDouble(buf, reader, start, end, 0);
 	}
 
 	private static float parseFloatGeneric(final char[] buf, final int len, final JsonReader reader) throws IOException {
