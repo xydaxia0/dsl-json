@@ -2,6 +2,7 @@ package com.dslplatform.maven;
 
 import com.dslplatform.json.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
@@ -202,6 +203,8 @@ public class Example {
 		instance.map.put("array", new int[] { 2, 4, 8});
 
 		dslJson.serialize(writer, instance);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		dslJson.serialize(instance, baos); // will use thread local writer for serialization
 
 		//resulting buffer with JSON
 		byte[] buffer = writer.getByteBuffer();
@@ -212,5 +215,12 @@ public class Example {
 		Model deser = dslJson.deserialize(Model.class, buffer, size);
 
 		System.out.println(deser.string);
+
+		//instance can also be reused
+		Model reusable = new Model();
+		JsonReader<Object> reader = dslJson.newReader().process(buffer, size);
+		Model same = reader.next(Model.class, reusable);
+		if (same != reusable) throw new RuntimeException("Instance should be the same");
+		else if (!same.string.equals(deser.string)) throw new RuntimeException("Values should be the same");
 	}
 }

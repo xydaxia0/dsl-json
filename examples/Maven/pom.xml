@@ -6,17 +6,17 @@
 
 	<groupId>com.dslplatform</groupId>
 	<artifactId>maven-example</artifactId>
-	<version>1.4.8</version>
+	<version>1.5.0</version>
 	<dependencies>
 		<dependency>
 			<groupId>com.dslplatform</groupId>
 			<artifactId>dsl-json</artifactId>
-			<version>1.4.3</version>
+			<version>1.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.dslplatform</groupId>
 			<artifactId>dsl-json-processor</artifactId>
-			<version>1.4.8</version>
+			<version>1.5.0</version>
 		</dependency>
 	</dependencies>
 
@@ -35,6 +35,7 @@
 						<!--Adsljson.loglevel>DEBUG</Adsljson.loglevel-->
 						<!--Adsljson.annotation>EXPLICIT</Adsljson.annotation-->
 						<!--Adsljson.compiler>custom_path_to_compiler/dsl-compiler.exe</Adsljson.compiler-->
+						<Adsljson.compiler>D:/Projects/NGS/Code/DslCompiler/Dotfuscated/dsl-compiler.exe</Adsljson.compiler>
 					</compilerArguments>
 				</configuration>
 			</plugin>

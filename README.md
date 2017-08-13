@@ -49,7 +49,7 @@ For use in Android, Gradle can be configured with:
 
     apply plugin: 'android-apt'
     dependencies {
-      compile 'com.dslplatform:dsl-json:1.4.3'
+      compile 'com.dslplatform:dsl-json:1.5.0'
       apt 'com.dslplatform:dsl-json-processor:1.4.8'
     }
 
@@ -126,7 +126,7 @@ For existing classes which can't be modified with `@JsonAttribute` alternative e
 
 During translation from Java objects into DSL schema, existing type system nullability rules are followed.
 With the help of non-null annotations, hints can be introduced to work around some Java nullability type system limitations.
-List of supported non-null annotations can be found in [processor source code](https://github.com/ngs-doo/dsl-json/blob/master/processor/src/main/java/com/dslplatform/json/CompiledJsonProcessor.java#L85)
+List of supported non-null annotations can be found in [processor source code](processor/src/main/java/com/dslplatform/json/CompiledJsonProcessor.java#L85)
 
 #### Property aliases
 
@@ -183,7 +183,7 @@ Library can be added as Maven dependency with:
     <dependency>
       <groupId>com.dslplatform</groupId>
       <artifactId>dsl-json</artifactId>
-      <version>1.4.3</version>
+      <version>1.5.0</version>
     </dependency>
 
 ## Best practices
