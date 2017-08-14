@@ -115,13 +115,13 @@ public class NumberConverterTest {
 
 		final int from = -10000000;
 		final int to = 10000000;
-		final double[] dividers = { 1d, 10d, 100d, 1000d, 10000d, 100000d };
+		final double[] dividers = {1d, 10d, 100d, 1000d, 10000d, 100000d};
 
 		for (int value = from, i = 0; value <= to; value += 33, i++) {
 			sw.reset();
 
 			// serialization
-			double d = value / dividers[i%dividers.length];
+			double d = value / dividers[i % dividers.length];
 			NumberConverter.serialize(d, sw);
 
 			jr.process(null, sw.size());
@@ -148,13 +148,13 @@ public class NumberConverterTest {
 
 		final int from = -10000000;
 		final int to = 10000000;
-		final float[] dividers = { 1f, 10f, 100f, 1000f, 10000f };
+		final float[] dividers = {1f, 10f, 100f, 1000f, 10000f};
 
 		for (int value = from, i = 0; value <= to; value += 33, i++) {
 			sw.reset();
 
 			// serialization
-			float f = value / dividers[i%dividers.length];
+			float f = value / dividers[i % dividers.length];
 			NumberConverter.serialize(f, sw);
 
 			jr.process(null, sw.size());
@@ -296,39 +296,39 @@ public class NumberConverterTest {
 		final Long positive18DigitLong = 876543210987654321L;
 		final Long negative18DigitLong = -876543210987654321L;
 		final BigDecimal positive18DigitAndOneDecimal = BigDecimal.valueOf(876543210987654321L).setScale(1);
-		final BigDecimal negative18DigitAndOneDecimal  = BigDecimal.valueOf(-876543210987654321L).setScale(1);
+		final BigDecimal negative18DigitAndOneDecimal = BigDecimal.valueOf(-876543210987654321L).setScale(1);
 		final Long maxLong = Long.MAX_VALUE;
 		final Long minLong = Long.MIN_VALUE;
 		final BigDecimal maxLongPlusOneAsBigDecimal = BigDecimal.valueOf(Long.MAX_VALUE).add(BigDecimal.ONE);
 		final BigDecimal minLongMinusOneAsBigDecimal = BigDecimal.valueOf(Long.MIN_VALUE).subtract(BigDecimal.ONE);
 
 		String input = "{\n" +
-				"\"maxIntAsLong\":" +          maxIntAsLong + ",\n" +
+				"\"maxIntAsLong\":" + maxIntAsLong + ",\n" +
 				"\"maxIntAsLongWithSign\":+" + maxIntAsLong + ",\n" +
-				"\"minIntAsLong\":" +          minIntAsLong + ",\n" +
-				"\"maxIntWithDecimalAsBigDecimal\":" +          maxIntWithDecimalAsBigDecimal + ",\n" +
+				"\"minIntAsLong\":" + minIntAsLong + ",\n" +
+				"\"maxIntWithDecimalAsBigDecimal\":" + maxIntWithDecimalAsBigDecimal + ",\n" +
 				"\"maxIntWithDecimalAsBigDecimalWithSign\":+" + maxIntWithDecimalAsBigDecimal + ",\n" +
-				"\"minIntWithDecimalAsBigDecimal\":" +          minIntWithDecimalAsBigDecimal + ",\n" +
-				"\"positive18DigitLong\":" +          positive18DigitLong + ",\n" +
+				"\"minIntWithDecimalAsBigDecimal\":" + minIntWithDecimalAsBigDecimal + ",\n" +
+				"\"positive18DigitLong\":" + positive18DigitLong + ",\n" +
 				"\"positive18DigitLongWithSign\":+" + positive18DigitLong + ",\n" +
-				"\"negative18DigitLong\":" +          negative18DigitLong + ",\n" +
-				"\"positive18DigitAndOneDecimal\":" +          positive18DigitAndOneDecimal + ",\n" +
+				"\"negative18DigitLong\":" + negative18DigitLong + ",\n" +
+				"\"positive18DigitAndOneDecimal\":" + positive18DigitAndOneDecimal + ",\n" +
 				"\"positive18DigitAndOneDecimalWithSign\":+" + positive18DigitAndOneDecimal + ",\n" +
-				"\"negative18DigitAndOneDecimal\":" +          negative18DigitAndOneDecimal + ",\n" +
-				"\"maxLong\":" +          maxLong + ",\n" +
+				"\"negative18DigitAndOneDecimal\":" + negative18DigitAndOneDecimal + ",\n" +
+				"\"maxLong\":" + maxLong + ",\n" +
 				"\"maxLongWithSign\":+" + maxLong + ",\n" +
-				"\"minLong\":" +          minLong + ",\n" +
-				"\"maxLongPlusOneAsBigDecimal\":" +          maxLongPlusOneAsBigDecimal + ",\n" +
+				"\"minLong\":" + minLong + ",\n" +
+				"\"maxLongPlusOneAsBigDecimal\":" + maxLongPlusOneAsBigDecimal + ",\n" +
 				"\"maxLongPlusOneAsBigDecimalWithSign\":+" + maxLongPlusOneAsBigDecimal + ",\n" +
-				"\"minLongMinusOneAsBigDecimal\":" +         minLongMinusOneAsBigDecimal + "\n" +
-		"}";
+				"\"minLongMinusOneAsBigDecimal\":" + minLongMinusOneAsBigDecimal + "\n" +
+				"}";
 
 		DslJson json = new DslJson();
 		Map result = (Map) json.deserialize(Map.class, input.getBytes("UTF-8"), input.length());
 		Assert.assertEquals(maxIntAsLong, result.get("maxIntAsLong"));
 		Assert.assertEquals(maxIntAsLong, result.get("maxIntAsLongWithSign"));
 		Assert.assertEquals(minIntAsLong, result.get("minIntAsLong"));
- 		Assert.assertEquals(maxIntWithDecimalAsBigDecimal, result.get("maxIntWithDecimalAsBigDecimal"));
+		Assert.assertEquals(maxIntWithDecimalAsBigDecimal, result.get("maxIntWithDecimalAsBigDecimal"));
 		Assert.assertEquals(maxIntWithDecimalAsBigDecimal, result.get("maxIntWithDecimalAsBigDecimalWithSign"));
 		Assert.assertEquals(minIntWithDecimalAsBigDecimal, result.get("minIntWithDecimalAsBigDecimal"));
 		Assert.assertEquals(positive18DigitLong, result.get("positive18DigitLong"));
@@ -411,11 +411,11 @@ public class NumberConverterTest {
 	public void primitiveFloatArrDeser() throws IOException {
 		// setup
 		final JsonWriter sw = new JsonWriter(null);
-		final float[] multiplier = { 1f, 1.11f, 1.111f, 1.1111f, 1.11111f };
+		final float[] multiplier = {1f, 1.11f, 1.111f, 1.1111f, 1.11111f};
 
 		final float[] input = new float[60000];
 		for (int i = 0; i < input.length; i++) {
-			input[i] = i * multiplier[i%multiplier.length];
+			input[i] = i * multiplier[i % multiplier.length];
 		}
 
 		NumberConverter.serialize(input, sw);
@@ -443,11 +443,11 @@ public class NumberConverterTest {
 	public void primitiveDoubleArrDeser() throws IOException {
 		// setup
 		final JsonWriter sw = new JsonWriter(null);
-		final double[] multiplier = { 1d, 1.11d, 1.111d, 1.1111d, 1.11111d, 1.111111d, 1.1111111d };
+		final double[] multiplier = {1d, 1.11d, 1.111d, 1.1111d, 1.11111d, 1.111111d, 1.1111111d};
 
 		final double[] input = new double[60000];
 		for (int i = 0; i < input.length; i++) {
-			input[i] = i * multiplier[i%multiplier.length];
+			input[i] = i * multiplier[i % multiplier.length];
 		}
 
 		NumberConverter.serialize(input, sw);
@@ -501,7 +501,7 @@ public class NumberConverterTest {
 		try {
 			NumberConverter.deserializeInt(reader);
 			Assert.fail();
-		}catch (IOException e) {
+		} catch (IOException e) {
 			Assert.assertTrue(e.getMessage().contains("Integer overflow"));
 		}
 		input = "-1234567890123456        \t\n\r               ";
@@ -510,8 +510,71 @@ public class NumberConverterTest {
 		try {
 			NumberConverter.deserializeInt(reader);
 			Assert.fail();
-		}catch (IOException e) {
+		} catch (IOException e) {
 			Assert.assertTrue(e.getMessage().contains("Integer overflow"));
+		}
+	}
+
+	@Test
+	public void doubleRandom() throws IOException {
+		// setup
+		final JsonWriter sw = new JsonWriter(40, null);
+		final JsonReader<Object> jr = dslJson.newReader(sw.getByteBuffer());
+		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
+
+		final Random rnd = new Random(0);
+
+		for (int i = 0; i < 1000000; i++) {
+			sw.reset();
+
+			// serialization
+			double d = rnd.nextDouble();
+			//d = 0.9644868606768501d;
+			NumberConverter.serialize(d, sw);
+
+			jr.process(null, sw.size());
+			jr.read();
+
+			final double valueParsed1 = NumberConverter.deserializeDouble(jr);
+			Assert.assertEquals(d, valueParsed1, 0);
+
+			final ByteArrayInputStream is = new ByteArrayInputStream(sw.getByteBuffer(), 0, sw.size());
+			jsr.process(is);
+			jsr.read();
+
+			final double valueParsed2 = NumberConverter.deserializeDouble(jsr);
+			Assert.assertEquals(d, valueParsed2, 0);
+		}
+	}
+
+	@Test
+	public void floatRandom() throws IOException {
+		// setup
+		final JsonWriter sw = new JsonWriter(40, null);
+		final JsonReader<Object> jr = dslJson.newReader(sw.getByteBuffer());
+		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
+
+		final Random rnd = new Random(0);
+
+		for (int i = 0; i < 1000000; i++) {
+			sw.reset();
+
+			// serialization
+			float f = rnd.nextFloat();
+			NumberConverter.serialize(f, sw);
+
+			jr.process(null, sw.size());
+			jr.read();
+
+			final float valueParsed1 = NumberConverter.deserializeFloat(jr);
+			Assert.assertEquals(f, valueParsed1, 0);
+
+			final ByteArrayInputStream is = new ByteArrayInputStream(sw.getByteBuffer(), 0, sw.size());
+			jsr.process(is);
+			jsr.read();
+
+			final float valueParsed2 = NumberConverter.deserializeFloat(jsr);
+			Assert.assertEquals(f, valueParsed2, 0);
 		}
 	}
 }

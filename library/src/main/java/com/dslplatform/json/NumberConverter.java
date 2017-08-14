@@ -229,20 +229,22 @@ public abstract class NumberConverter {
 		}
 		if (i == end) {
 			return value;
-		} else if (i > 18 + start || end - i > 19 + start) {
+		} else if (i > 18 + start + offset || end > i + 16 + start + offset) {
 			return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 		} else if (ch == '.') {
 			i++;
+			final int startI = i;
 			long div = 1;
+			long decimals = 0;
 			for (; i < end; i++) {
 				final int ind = buf[i] - 48;
 				div = (div << 3) + (div << 1);
-				value = (value << 3) + (value << 1) + ind;
+				decimals = (decimals << 3) + (decimals << 1) + ind;
 				if (ind < 0 || ind > 9) {
 					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 				}
 			}
-			return value / (double) div;
+			return value + decimals / (double)div;
 		}
 		return value;
 	}
