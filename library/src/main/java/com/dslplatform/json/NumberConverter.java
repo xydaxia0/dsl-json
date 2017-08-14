@@ -8,7 +8,7 @@ import java.util.Collection;
 
 public abstract class NumberConverter {
 
-	private final static double[] POW_10 = new double[18];
+	private final static double[] POW_10 = new double[20];
 	private final static int[] DIGITS = new int[1000];
 
 	static final JsonReader.ReadObject<Double> DoubleReader = new JsonReader.ReadObject<Double>() {
@@ -87,7 +87,7 @@ public abstract class NumberConverter {
 		}
 		long tenPow = 1;
 		for (int i = 0; i < POW_10.length; i++) {
-			POW_10[i] = tenPow;
+			POW_10[i] = 1d / tenPow;
 			tenPow = tenPow * 10;
 		}
 	}
@@ -227,8 +227,8 @@ public abstract class NumberConverter {
 		int i = start + offset;
 		for (; i < end; i++) {
 			ch = buf[i];
-			if (ch == '.') break;
-			final int ind = buf[i] - 48;
+			if (ch == '.' || ch == 'e' || ch == 'E') break;
+			final int ind = ch - 48;
 			value = (value << 3) + (value << 1) + ind;
 			if (ind < 0 || ind > 9) {
 				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
@@ -239,32 +239,62 @@ public abstract class NumberConverter {
 		} else if (i == end) {
 			return value;
 		} else if (ch == '.') {
-			if (end > i + 16) {
-				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
-			} else if (end < start + offset + 18) {
-				i++;
-				final int mark = i;
-				for (; i < end; i++) {
-					final int ind = buf[i] - 48;
-					value = (value << 3) + (value << 1) + ind;
-					if (ind < 0 || ind > 9) {
-						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
-					}
+			i++;
+			final int dp = i;
+			final int maxAllowed = dp + 16;
+			final int maxNums = end < maxAllowed ? end : maxAllowed;
+			for (; i < maxNums; i++) {
+				ch = buf[i];
+				if (ch == 'e' || ch == 'E') break;
+				final int ind = ch - 48;
+				value = (value << 3) + (value << 1) + ind;
+				if (ind < 0 || ind > 9) {
+					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 				}
-				return value / POW_10[end - mark];
-			} else {
-				i++;
-				long decimals = 0;
-				final int mark = i;
-				for (; i < end; i++) {
-					final int ind = buf[i] - 48;
-					decimals = (decimals << 3) + (decimals << 1) + ind;
-					if (ind < 0 || ind > 9) {
-						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
-					}
-				}
-				return value + decimals / POW_10[end - mark];
 			}
+			double number = value * POW_10[i - dp];
+			if (i == end) return number;
+			else if (i == maxNums) {
+				if (end > start + offset + 18) {
+					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+				}
+				for (; i < end; i++) {
+					ch = buf[i];
+					if (ch == 'e' || ch == 'E') break;
+					final int ind = ch - 48;
+					number += ind * POW_10[i - dp];
+					if (ind < 0 || ind > 9) {
+						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+					}
+				}
+			}
+			if (ch == 'e' || ch == 'E') {
+				final int ep = i;
+				i++;
+				ch = buf[i];
+				final int exp;
+				if (ch == '-') {
+					exp = parseNegativeInt(buf, reader, start, end, i + 1);
+				} else if (ch == '+') {
+					exp = parsePositiveInt(buf, reader, start, end, i + 1);
+				} else {
+					exp = parsePositiveInt(buf, reader, start, end, i);
+				}
+				return BigDecimal.valueOf(value, ep - dp - exp);
+			}
+			return number;
+		} else if (ch == 'e' || ch == 'E') {
+			i++;
+			ch = buf[i];
+			final int exp;
+			if (ch == '-') {
+				exp = parseNegativeInt(buf, reader, start, end, i + 1);
+			} else if (ch == '+') {
+				exp = parsePositiveInt(buf, reader, start, end, i + 1);
+			} else {
+				exp = parsePositiveInt(buf, reader, start, end, i);
+			}
+			return BigDecimal.valueOf(value, -exp).doubleValue();
 		}
 		return value;
 	}
