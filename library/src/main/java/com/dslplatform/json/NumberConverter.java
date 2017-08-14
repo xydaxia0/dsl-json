@@ -9,6 +9,19 @@ import java.util.Collection;
 public abstract class NumberConverter {
 
 	private final static int[] DIGITS = new int[1000];
+	private final static double[] POW_10 = {
+			1.0e1,  1.0e2,  1.0e3,  1.0e4,  1.0e5, 1.0e6,
+			1.0e7,  1.0e8,  1.0e9,  1.0e10, 1.0e11, 1.0e12,
+			1.0e13, 1.0e14, 1.0e15, 1.0e16, 1.0e17, 1.0e18,
+			1.0e19, 1.0e20
+	};
+	private final static double[] POW_10_EXTRA = {
+			0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0.05, 0.05, 0.05,
+			0, 0
+	};
+
 	static final JsonReader.ReadObject<Double> DoubleReader = new JsonReader.ReadObject<Double>() {
 		@Override
 		public Double read(JsonReader reader) throws IOException {
@@ -220,31 +233,122 @@ public abstract class NumberConverter {
 		int i = start + offset;
 		for (; i < end; i++) {
 			ch = buf[i];
-			if (ch == '.') break;
-			final int ind = buf[i] - 48;
+			if (ch == '.' || ch == 'e' || ch == 'E') break;
+			final int ind = ch - 48;
 			value = (value << 3) + (value << 1) + ind;
 			if (ind < 0 || ind > 9) {
+				if (reader.allWhitespace(i, end)) return value;
 				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 			}
 		}
-		if (i == end) {
-			return value;
-		} else if (i > 18 + start + offset || end > i + 16 + start + offset) {
+		if (i > 18 + start + offset) {
 			return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+		} else if (i == end) {
+			return value;
 		} else if (ch == '.') {
 			i++;
-			final int startI = i;
-			long div = 1;
-			long decimals = 0;
-			for (; i < end; i++) {
-				final int ind = buf[i] - 48;
-				div = (div << 3) + (div << 1);
-				decimals = (decimals << 3) + (decimals << 1) + ind;
+			final int dp = i;
+			int maxLen = start + offset + 15;
+			if (end < maxLen) {
+				for (; i < end; i++) {
+					ch = buf[i];
+					if (ch == 'e' || ch == 'E') break;
+					final int ind = ch - 48;
+					value = (value << 3) + (value << 1) + ind;
+					if (ind < 0 || ind > 9) {
+						if (i - start - offset < 19 && reader.allWhitespace(i, end)) {
+							return value / POW_10[i - dp];
+						}
+						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+					}
+				}
+				final double number = value / POW_10[i - dp - 1];
+				if (ch == 'e' || ch == 'E') {
+					i++;
+					ch = buf[i];
+					final int exp;
+					if (ch == '-') {
+						exp = parseNegativeInt(buf, reader, start, end, i + 1);
+					} else if (ch == '+') {
+						exp = parsePositiveInt(buf, reader, start, end, i + 1);
+					} else {
+						exp = parsePositiveInt(buf, reader, start, end, i);
+					}
+					if (exp == 0) return number;
+					else if (exp > 0 && exp < POW_10.length) return number * POW_10[exp - 1];
+					else if (exp < 0 && -exp < POW_10.length) return number / POW_10[-exp - 1];
+					else if (exp > -300 && exp < 300) return number * Math.pow(10, exp - 1);
+					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+				}
+				return number;
+			}
+			long decimals1 = 0, decimals2 = 0;
+			for (; i < maxLen; i++) {
+				ch = buf[i];
+				if (ch == 'e' || ch == 'E') break;
+				final int ind = ch - 48;
+				decimals1 = (decimals1 << 3) + (decimals1 << 1) + ind;
 				if (ind < 0 || ind > 9) {
+					if (i - start - offset < 19 && reader.allWhitespace(i, end)) {
+						return value + decimals1 / POW_10[i - dp];
+					}
 					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 				}
 			}
-			return value + decimals / (double)div;
+			final int sp = i;
+			if (ch != 'e' && ch != 'E') {
+				for (; i < end; i++) {
+					ch = buf[i];
+					if (ch == 'e' || ch == 'E') break;
+					final int ind = ch - 48;
+					decimals2 = (decimals2 << 3) + (decimals2 << 1) + ind;
+					if (ind < 0 || ind > 9) {
+						if (i - start - offset < 19 && reader.allWhitespace(i, end)) {
+							return value + decimals1 / POW_10[sp - dp] + decimals2 / POW_10[i - dp];
+						}
+						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+					}
+				}
+			}
+			if (i > 20 + start + offset) {
+				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+			}
+			final double number = decimals2 == 0 ? decimals1 / POW_10[sp - dp - 1]
+					: decimals1 / POW_10[sp - dp - 1] + (decimals2 + POW_10_EXTRA[i - dp - 1]) / POW_10[i - dp - 1];
+			if (ch == 'e' || ch == 'E') {
+				i++;
+				ch = buf[i];
+				final int exp;
+				if (ch == '-') {
+					exp = parseNegativeInt(buf, reader, start, end, i + 1);
+				} else if (ch == '+') {
+					exp = parsePositiveInt(buf, reader, start, end, i + 1);
+				} else {
+					exp = parsePositiveInt(buf, reader, start, end, i);
+				}
+				if (exp == 0) return value + number;
+				else if (exp > 0 && exp < POW_10.length) return number * POW_10[exp - 1] + value * POW_10[exp - 1];
+				else if (exp < 0 && -exp < POW_10.length) return number / POW_10[-exp - 1] + value * POW_10[-exp - 1];
+				else if (exp > -300 && exp < 300) return (value + number) * Math.pow(10, exp - 1);
+				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+			}
+			return value + number;
+		} else if (ch == 'e' || ch == 'E') {
+			i++;
+			ch = buf[i];
+			final int exp;
+			if (ch == '-') {
+				exp = parseNegativeInt(buf, reader, start, end, i + 1);
+			} else if (ch == '+') {
+				exp = parsePositiveInt(buf, reader, start, end, i + 1);
+			} else {
+				exp = parsePositiveInt(buf, reader, start, end, i);
+			}
+			if (exp == 0) return value;
+			else if (exp > 0 && exp < POW_10.length) return value * POW_10[exp - 1];
+			else if (exp < 0 && -exp < POW_10.length) return value / POW_10[-exp - 1];
+			else if (exp > -300 && exp < 300) return value * Math.pow(10, exp);
+			return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 		}
 		return value;
 	}
@@ -487,7 +591,7 @@ public abstract class NumberConverter {
 			final int ind = buf[i] - 48;
 			if (ind < 0 || ind > 9) {
 				if (reader.allWhitespace(i, end)) return value;
-				BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
+				final BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 				if (v.scale() <= 0) return v.intValue();
 				throw new IOException("Error parsing int number at position: " + reader.positionInStream(end - start) + ". Found decimal value: " + v);
 			}
@@ -505,7 +609,7 @@ public abstract class NumberConverter {
 			final int ind = buf[i] - 48;
 			if (ind < 0 || ind > 9) {
 				if (reader.allWhitespace(i, end)) return value;
-				BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
+				final BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 				if (v.scale() <= 0) return v.intValue();
 				throw new IOException("Error parsing int number at position: " + reader.positionInStream(end - start) + ". Found decimal value: " + v);
 			}
@@ -799,7 +903,7 @@ public abstract class NumberConverter {
 	}
 
 	private static long parseLongGeneric(final JsonReader reader, final int start, final int end) throws IOException {
-		BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
+		final BigDecimal v = parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 		if (v.scale() <= 0) return v.longValue();
 		throw new IOException("Error parsing long number at position: " + reader.positionInStream(end - start) + ". Found decimal value: " + v);
 	}
@@ -856,8 +960,6 @@ public abstract class NumberConverter {
 		final byte ch = buf[start];
 		if (ch == '-') {
 			return parseNegativeDecimal(buf, reader, start, end);
-		} else if (ch == '+') {
-			return parsePositiveDecimal(buf, reader, start, end, start + 1);
 		}
 		return parsePositiveDecimal(buf, reader, start, end, start);
 	}
@@ -871,6 +973,7 @@ public abstract class NumberConverter {
 			final int ind = ch - 48;
 			value = (value << 3) + (value << 1) + ind;
 			if (ind < 0 || ind > 9) {
+				if (reader.allWhitespace(i, end)) return BigDecimal.valueOf(value);
 				return parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 			}
 		}
@@ -884,6 +987,7 @@ public abstract class NumberConverter {
 				final int ind = ch - 48;
 				value = (value << 3) + (value << 1) + ind;
 				if (ind < 0 || ind > 9) {
+					if (reader.allWhitespace(i, end)) return BigDecimal.valueOf(value, end - dp);
 					return parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 				}
 			}
@@ -943,6 +1047,7 @@ public abstract class NumberConverter {
 				final int ind = ch - 48;
 				value = (value << 3) + (value << 1) - ind;
 				if (ind < 0 || ind > 9) {
+					if (reader.allWhitespace(i, end)) return BigDecimal.valueOf(value, end - dp);
 					return parseNumberGeneric(reader.prepareBuffer(start), end - start, reader);
 				}
 			}
