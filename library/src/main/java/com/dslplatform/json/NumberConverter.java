@@ -8,7 +8,9 @@ import java.util.Collection;
 
 public abstract class NumberConverter {
 
+	private final static double[] POW_10 = new double[18];
 	private final static int[] DIGITS = new int[1000];
+
 	static final JsonReader.ReadObject<Double> DoubleReader = new JsonReader.ReadObject<Double>() {
 		@Override
 		public Double read(JsonReader reader) throws IOException {
@@ -82,6 +84,11 @@ public abstract class NumberConverter {
 					+ (((i / 100) + '0') << 16)
 					+ ((((i / 10) % 10) + '0') << 8)
 					+ i % 10 + '0';
+		}
+		long tenPow = 1;
+		for (int i = 0; i < POW_10.length; i++) {
+			POW_10[i] = tenPow;
+			tenPow = tenPow * 10;
 		}
 	}
 
@@ -227,24 +234,37 @@ public abstract class NumberConverter {
 				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
 			}
 		}
-		if (i == end) {
-			return value;
-		} else if (i > 18 + start + offset || end > i + 16 + start + offset) {
+		if (i > 18 + start + offset) {
 			return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+		} else if (i == end) {
+			return value;
 		} else if (ch == '.') {
-			i++;
-			final int startI = i;
-			long div = 1;
-			long decimals = 0;
-			for (; i < end; i++) {
-				final int ind = buf[i] - 48;
-				div = (div << 3) + (div << 1);
-				decimals = (decimals << 3) + (decimals << 1) + ind;
-				if (ind < 0 || ind > 9) {
-					return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+			if (end > i + 16) {
+				return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+			} else if (end < start + offset + 18) {
+				i++;
+				final int mark = i;
+				for (; i < end; i++) {
+					final int ind = buf[i] - 48;
+					value = (value << 3) + (value << 1) + ind;
+					if (ind < 0 || ind > 9) {
+						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+					}
 				}
+				return value / POW_10[end - mark];
+			} else {
+				i++;
+				long decimals = 0;
+				final int mark = i;
+				for (; i < end; i++) {
+					final int ind = buf[i] - 48;
+					decimals = (decimals << 3) + (decimals << 1) + ind;
+					if (ind < 0 || ind > 9) {
+						return parseDoubleGeneric(reader.prepareBuffer(start + offset), end - start - offset, reader);
+					}
+				}
+				return value + decimals / POW_10[end - mark];
 			}
-			return value + decimals / (double)div;
 		}
 		return value;
 	}

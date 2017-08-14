@@ -529,7 +529,37 @@ public class NumberConverterTest {
 
 			// serialization
 			double d = rnd.nextDouble();
-			//d = 0.9644868606768501d;
+			NumberConverter.serialize(d, sw);
+
+			jr.process(null, sw.size());
+			jr.read();
+
+			final double valueParsed1 = NumberConverter.deserializeDouble(jr);
+			Assert.assertEquals(d, valueParsed1, 0);
+
+			final ByteArrayInputStream is = new ByteArrayInputStream(sw.getByteBuffer(), 0, sw.size());
+			jsr.process(is);
+			jsr.read();
+
+			final double valueParsed2 = NumberConverter.deserializeDouble(jsr);
+			Assert.assertEquals(d, valueParsed2, 0);
+		}
+	}
+
+	@Test
+	public void doubleIntRandom() throws IOException {
+		// setup
+		final JsonWriter sw = new JsonWriter(40, null);
+		final JsonReader<Object> jr = dslJson.newReader(sw.getByteBuffer());
+		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
+
+		final Random rnd = new Random(0);
+
+		for (int i = 0; i < 10000000; i++) {
+			sw.reset();
+
+			// serialization
+			double d = rnd.nextDouble() * rnd.nextInt();
 			NumberConverter.serialize(d, sw);
 
 			jr.process(null, sw.size());
@@ -575,6 +605,36 @@ public class NumberConverterTest {
 
 			final float valueParsed2 = NumberConverter.deserializeFloat(jsr);
 			Assert.assertEquals(f, valueParsed2, 0);
+		}
+	}
+
+
+	@Test
+	public void doubleRoundingError() throws IOException {
+		// setup
+		final JsonWriter sw = new JsonWriter(40, null);
+		final JsonReader<Object> jr = dslJson.newReader(sw.getByteBuffer());
+		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
+
+		double[] values = {0.9644868606768501d, 2.716906186888657d, 98.48415401998089d, -9603443.683176761d};
+
+		for (double d : values) {
+			sw.reset();
+
+			NumberConverter.serialize(d, sw);
+
+			jr.process(null, sw.size());
+			jr.read();
+
+			final double valueParsed1 = NumberConverter.deserializeDouble(jr);
+			Assert.assertEquals(d, valueParsed1, 0);
+
+			final ByteArrayInputStream is = new ByteArrayInputStream(sw.getByteBuffer(), 0, sw.size());
+			jsr.process(is);
+			jsr.read();
+
+			final double valueParsed2 = NumberConverter.deserializeDouble(jsr);
+			Assert.assertEquals(d, valueParsed2, 0);
 		}
 	}
 }
