@@ -11,7 +11,7 @@ import java.util.*;
 
 public class NumberConverterTest {
 
-	private final DslJson<Object> dslJson = new DslJson<Object>(new DslJson.Settings<Object>().doublePrecision(JsonReader.DoublePrecision.DEFAULT));
+	private final DslJson<Object> dslJson = new DslJson<Object>(new DslJson.Settings<Object>().doublePrecision(JsonReader.DoublePrecision.EXACT));
 
 	@Test
 	public void rangeCheckInt() throws IOException {
@@ -845,15 +845,19 @@ public class NumberConverterTest {
 		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
 
 		double[] values = {
-				/*-740342.9473267009d,
+				-5983259.62725876d,
+				-1800849.97476139d,
+				54940.897509449234d,
+				54940.89750944923d,
+				-740342.9473267009d,
 				-74034294.73267009d,
-				-7403429.473267009d, //TODO: doesn't work on default
+				-7403429.473267009d,
 				-7403429.4732670095d,
-				0.6374174253501083d, //TODO: doesn't work on default
-				0.6374174253501084d, //TODO: doesn't work on default
-				-9.514467982939291E8d,*/
-				//0.9644868606768501d,
-				//0.96448686067685d,
+				0.6374174253501083d,
+				0.6374174253501084d,
+				-9.514467982939291E8d,
+				0.9644868606768501d,
+				0.96448686067685d,
 				2.716906186888657d,
 				98.48415401998089d,
 				98.48415401998088d,
@@ -861,6 +865,7 @@ public class NumberConverterTest {
 				7.551599396638066E8d,
 				8.484850737442602E8,
 				-99.86965d,
+				-777.77d,
 				0.984841540199809d,
 				0.9848415401998091d,
 				1.111538368674174E9d,
@@ -880,13 +885,13 @@ public class NumberConverterTest {
 
 			final double valueParsed1 = NumberConverter.deserializeDouble(jr);
 			Assert.assertEquals(d, valueParsed1, 0);
-/*
+
 			final ByteArrayInputStream is = new ByteArrayInputStream(sw.getByteBuffer(), 0, sw.size());
 			jsr.process(is);
 			jsr.read();
 
 			final double valueParsed2 = NumberConverter.deserializeDouble(jsr);
-			Assert.assertEquals(d, valueParsed2, 0);*/
+			Assert.assertEquals(d, valueParsed2, 0);
 		}
 	}
 }

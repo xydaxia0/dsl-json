@@ -11,7 +11,7 @@ public abstract class NumberConverter {
 	private final static int[] DIGITS = new int[1000];
 	private final static int[] DIFF = {111, 222, 444, 888, 1776};
 	private final static int[] ERROR = {50, 100, 200, 400, 800};
-	private final static int[] SCALE_10 = {1000, 100, 10, 1};
+	private final static int[] SCALE_10 = {10000, 1000, 100, 10, 1};
 	private final static double[] POW_10 = {
 			1e1,  1e2,  1e3,  1e4,  1e5, 1e6, 1e7, 1e8,  1e9,
 			1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
@@ -280,13 +280,12 @@ public abstract class NumberConverter {
 					decOffset = 0;
 				}
 			} else {
+				maxLen = start + offset + 15;
 				if (buf[start + offset] < '8') {
-					maxLen = start + offset + 15;
 					preciseDividor = 1e13;
 					expDiff = i - maxLen + 13;
 					decOffset = 2;
 				} else {
-					maxLen = start + offset + 14;
 					preciseDividor = 1e14;
 					expDiff = i - maxLen + 14;
 					decOffset = 1;
@@ -304,7 +303,7 @@ public abstract class NumberConverter {
 				}
 				value = (value << 3) + (value << 1) + ind;
 			}
-			if (i == end) return value / POW_10[i - decPos - 1 + decOffset];
+			if (i == end) return value / POW_10[i - decPos - 1];
 			else if (ch == 'e' || ch == 'E') {
 				return doubleExponent(reader, value, i - decPos,0, buf, start, end, offset, i);
 			}
@@ -344,7 +343,7 @@ public abstract class NumberConverter {
 	private static double approximateDouble(final int decimals, final double precise, final int digits) {
 		final long bits = Double.doubleToRawLongBits(precise);
 		final int exp = (int)(bits >> 52) - 1022;
-		final int missing = (decimals * SCALE_10[digits] + ERROR[exp]) / DIFF[exp];
+		final int missing = (decimals * SCALE_10[digits + 1] + ERROR[exp]) / DIFF[exp];
 		return Double.longBitsToDouble(bits + missing);
 	}
 
