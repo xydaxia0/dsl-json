@@ -270,7 +270,10 @@ public abstract class NumberConverter {
 			final int decOffset;
 			if (value == 0) {
 				maxLen = i + 15;
-				if (buf[i] < '8') {
+				ch = buf[i];
+				if (ch == '0' && end > maxLen) {
+					return parseDoubleGeneric(reader.prepareBuffer(start + offset, end - start - offset), end - start - offset, reader);
+				} else if (ch < '8') {
 					preciseDividor = 1e14;
 					expDiff = -1;
 					decOffset = 1;
@@ -343,7 +346,8 @@ public abstract class NumberConverter {
 	private static double approximateDouble(final int decimals, final double precise, final int digits) {
 		final long bits = Double.doubleToRawLongBits(precise);
 		final int exp = (int)(bits >> 52) - 1022;
-		final int missing = (decimals * SCALE_10[digits + 1] + ERROR[exp]) / DIFF[exp];
+		int missing = (decimals * SCALE_10[digits + 1] + ERROR[exp]) / DIFF[exp];
+		if (digits == 0 && exp == 3 && decimals * 10 > 888) missing++;
 		return Double.longBitsToDouble(bits + missing);
 	}
 

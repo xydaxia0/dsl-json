@@ -11,7 +11,7 @@ import java.util.*;
 
 public class NumberConverterTest {
 
-	private final DslJson<Object> dslJson = new DslJson<Object>(new DslJson.Settings<Object>().doublePrecision(JsonReader.DoublePrecision.EXACT));
+	private final DslJson<Object> dslJson = new DslJson<Object>(new DslJson.Settings<Object>().doublePrecision(JsonReader.DoublePrecision.DEFAULT));
 
 	@Test
 	public void rangeCheckInt() throws IOException {
@@ -845,6 +845,11 @@ public class NumberConverterTest {
 		final JsonReader<Object> jsr = dslJson.newReader(new ByteArrayInputStream(new byte[0]), new byte[64]);
 
 		double[] values = {
+				5983259.62725876d,
+				65600.45509999999d,
+				65600.45509999998d,
+				-707224.705947716d,
+				0.04040949867001864d,
 				-5983259.62725876d,
 				-1800849.97476139d,
 				54940.897509449234d,
