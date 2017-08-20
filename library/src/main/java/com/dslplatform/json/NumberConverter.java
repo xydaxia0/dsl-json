@@ -9,7 +9,9 @@ import java.util.Collection;
 public abstract class NumberConverter {
 
 	private final static int[] DIGITS = new int[1000];
-	private final static int[] DIFF = new int[25];
+	private final static int[] DIFF = {111, 222, 444, 888, 1776};
+	private final static int[] ERROR = {50, 100, 200, 400, 800};
+	private final static int[] SCALE_10 = {1000, 100, 10, 1};
 	private final static double[] POW_10 = {
 			1e1,  1e2,  1e3,  1e4,  1e5, 1e6, 1e7, 1e8,  1e9,
 			1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
@@ -90,11 +92,6 @@ public abstract class NumberConverter {
 					+ (((i / 100) + '0') << 16)
 					+ ((((i / 10) % 10) + '0') << 8)
 					+ i % 10 + '0';
-		}
-		int diff = 111;
-		for (int i = 0; i < DIFF.length; i++) {
-			DIFF[i] = diff;
-			diff *= 2;
 		}
 	}
 
@@ -266,46 +263,78 @@ public abstract class NumberConverter {
 		else if (ch == '.') {
 			i++;
 			if (i == end) numberException(reader, start, end, "Number ends with a dot");
-			long div = 1;
-			final int maxLen = start + offset + 15;
-			final int numLimit = maxLen < end ? maxLen : end;
+			final int maxLen;
+			final double preciseDividor;
+			final int expDiff;
 			final int decPos = i;
+			final int decOffset;
+			if (value == 0) {
+				maxLen = i + 15;
+				if (buf[i] < '8') {
+					preciseDividor = 1e14;
+					expDiff = -1;
+					decOffset = 1;
+				} else {
+					preciseDividor = 1e15;
+					expDiff = 0;
+					decOffset = 0;
+				}
+			} else {
+				if (buf[start + offset] < '8') {
+					maxLen = start + offset + 15;
+					preciseDividor = 1e13;
+					expDiff = i - maxLen + 13;
+					decOffset = 2;
+				} else {
+					maxLen = start + offset + 14;
+					preciseDividor = 1e14;
+					expDiff = i - maxLen + 14;
+					decOffset = 1;
+				}
+			}
+			final int numLimit = maxLen < end ? maxLen : end;
+			//TODO zeros
 			for (; i < numLimit; i++) {
 				ch = buf[i];
 				if (ch == 'e' || ch == 'E') break;
 				final int ind = ch - 48;
 				if (ind < 0 || ind > 9) {
-					if (reader.allWhitespace(i, end)) return value / (double)div;
+					if (reader.allWhitespace(i, end)) return value / POW_10[i - decPos - 1];
 					numberException(reader, start, end, "Unknown digit: " + (char)buf[i]);
 				}
-				div = (div << 3) + (div << 1);
 				value = (value << 3) + (value << 1) + ind;
 			}
-			if (i == end) return value / (double)div;
+			if (i == end) return value / POW_10[i - decPos - 1 + decOffset];
 			else if (ch == 'e' || ch == 'E') {
 				return doubleExponent(reader, value, i - decPos,0, buf, start, end, offset, i);
 			}
-			double number = value / (double)div;
+			double number = value / preciseDividor;//most precise representation
 			int decimals = 0;
 			final int decLimit = start + offset + 18 < end ? start + offset + 18 : end;
+			final int remPos = i;
 			for(;i < decLimit; i++) {
 				ch = buf[i];
 				if (ch == 'e' || ch == 'E') break;
 				final int ind = ch - 48;
 				if (ind < 0 || ind > 9) {
-					if (reader.allWhitespace(i, end)) return approximateDouble(decimals, number, i - start - offset - 14);
+					if (reader.allWhitespace(i, end)) return approximateDouble(decimals, number, i - remPos - decOffset);
 					numberException(reader, start, end, "Unknown digit: " + (char)buf[i]);
 				}
 				decimals = (decimals << 3) + (decimals << 1) + ind;
 			}
-			number = approximateDouble(decimals, number, i - start - offset - 14);
+			number = approximateDouble(decimals, number, i - remPos - decOffset);
 			while (i < end && ch >= '0' && ch <= '9') {
 				ch = buf[i++];
 			}
 			if (ch == 'e' || ch == 'E') {
-				return doubleExponent(reader, 0, 0, number, buf, start, end, offset, i);
+				return doubleExponent(reader, 0, expDiff, number, buf, start, end, offset, i);
+			} else if (expDiff > 0) {
+				return number * POW_10[expDiff - 1];
+			} else if (expDiff < 0) {
+				return number / POW_10[-expDiff - 1];
+			} else {
+				return number;
 			}
-			return number;
 		} else if (ch == 'e' || ch == 'E') {
 			return doubleExponent(reader, value, 0, 0, buf, start, end, offset, i);
 		}
@@ -314,8 +343,8 @@ public abstract class NumberConverter {
 
 	private static double approximateDouble(final int decimals, final double precise, final int digits) {
 		final long bits = Double.doubleToRawLongBits(precise);
-		final int exp = (int)(bits >> 52) - 1023;
-		final int missing = decimals / DIFF[exp + 1];
+		final int exp = (int)(bits >> 52) - 1022;
+		final int missing = (decimals * SCALE_10[digits] + ERROR[exp]) / DIFF[exp];
 		return Double.longBitsToDouble(bits + missing);
 	}
 
