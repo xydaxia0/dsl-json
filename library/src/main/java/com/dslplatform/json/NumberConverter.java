@@ -9,6 +9,7 @@ import java.util.Collection;
 public abstract class NumberConverter {
 
 	private final static int[] DIGITS = new int[1000];
+	private final static int[] DIFF = new int[25];
 	private final static double[] POW_10 = {
 			1e1,  1e2,  1e3,  1e4,  1e5, 1e6, 1e7, 1e8,  1e9,
 			1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
@@ -84,11 +85,16 @@ public abstract class NumberConverter {
 	};
 
 	static {
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < DIGITS.length; i++) {
 			DIGITS[i] = (i < 10 ? (2 << 24) : i < 100 ? (1 << 24) : 0)
 					+ (((i / 100) + '0') << 16)
 					+ ((((i / 10) % 10) + '0') << 8)
 					+ i % 10 + '0';
+		}
+		int diff = 111;
+		for (int i = 0; i < DIFF.length; i++) {
+			DIFF[i] = diff;
+			diff *= 2;
 		}
 	}
 
@@ -280,41 +286,21 @@ public abstract class NumberConverter {
 				return doubleExponent(reader, value, i - decPos,0, buf, start, end, offset, i);
 			}
 			double number = value / (double)div;
-			div = 1;
-			long decimals = 0;
-			final double divider = POW_10[i - decPos - 1];
-			for(;i < end; i++) {
+			int decimals = 0;
+			final int decLimit = start + offset + 18 < end ? start + offset + 18 : end;
+			for(;i < decLimit; i++) {
 				ch = buf[i];
 				if (ch == 'e' || ch == 'E') break;
 				final int ind = ch - 48;
 				if (ind < 0 || ind > 9) {
-					if (reader.allWhitespace(i, end)) {
-						return (decimals / (double)div) / divider + number;
-					}
+					if (reader.allWhitespace(i, end)) return approximateDouble(decimals, number, i - start - offset - 14);
 					numberException(reader, start, end, "Unknown digit: " + (char)buf[i]);
 				}
 				decimals = (decimals << 3) + (decimals << 1) + ind;
-				div = (div << 3) + (div << 1);
 			}
-			final double remainder = (decimals / (double)div) / divider;
-			final double num1 = number + remainder;
-			if (reader.doublePrecision == JsonReader.DoublePrecision.LOW) {
-				number = num1;
-			} else {
-				final double num2 = (number * 10 + remainder * 10) / 10;
-				if (num1 != num2) {
-					final double num3 = num1 * divider;
-					final int diff1 = (int) (num3 * div - ((long) num3) * div);
-					if (diff1 == decimals) {
-						number = num1;
-					} else {
-						final double num4 = num2 * divider;
-						final int diff2 = (int) (num4 * div - ((long) num4) * div);
-						number = Math.abs(decimals - diff1) <= Math.abs(decimals - diff2) ? num1 : num2;
-					}
-				} else {
-					number = num1;
-				}
+			number = approximateDouble(decimals, number, i - start - offset - 14);
+			while (i < end && ch >= '0' && ch <= '9') {
+				ch = buf[i++];
 			}
 			if (ch == 'e' || ch == 'E') {
 				return doubleExponent(reader, 0, 0, number, buf, start, end, offset, i);
@@ -324,6 +310,13 @@ public abstract class NumberConverter {
 			return doubleExponent(reader, value, 0, 0, buf, start, end, offset, i);
 		}
 		return value;
+	}
+
+	private static double approximateDouble(final int decimals, final double precise, final int digits) {
+		final long bits = Double.doubleToRawLongBits(precise);
+		final int exp = (int)(bits >> 52) - 1023;
+		final int missing = decimals / DIFF[exp + 1];
+		return Double.longBitsToDouble(bits + missing);
 	}
 
 	private static double doubleExponent(JsonReader reader, final long whole, final int decimals, double fraction, byte[] buf, int start, int end, int offset, int i) throws IOException {
